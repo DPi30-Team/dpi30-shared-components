@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "automationAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the automation account"
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Free",
+        "Basic"
+      ],
+      "metadata": {
+        "description": "The pricing tier of the automation account"
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('automationAccountName')]",
+      "type": "Microsoft.Automation/automationAccounts",
+      "apiVersion": "2015-10-31",
+      "tags": {
+        "Display Name": "[concat('Automation Account: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('skuName')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}

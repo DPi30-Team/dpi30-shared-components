@@ -1,0 +1,70 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "cdnProfileName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Content Delivery Network (CDN) profile"
+      }
+    },
+    "cdnSKU": {
+      "type": "string",
+      "defaultValue": "Standard_Verizon",
+      "allowedValues": [
+        "Premium_Verizon",
+        "Custom_Verizon",
+        "Standard_Verizon",
+        "Standard_Akamai",
+        "Standard_Microsoft"
+      ]
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('cdnProfileName')]",
+      "type": "Microsoft.Cdn/profiles",
+      "apiVersion": "2017-10-12",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Display Name": "[concat('CDN Profile: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "sku": {
+        "name": "[parameters('cdnSKU')]"
+      }
+    }
+  ],
+  "outputs": {}
+}

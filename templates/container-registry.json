@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "configuration": {
+      "defaultValue": {
+        "Display Name": "Container Registry ADAP",
+        "Bill To - Internal Chargeback ID": "8675309",
+        "Operator or Directly Responsible Individual (DRI)": "azureadmin@company.com",
+        "Project Name": "ADAP",
+        "Project Version": "1.0",
+        "Environment": "smk",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "type": "object",
+      "metadata": {
+        "description": "Configuration for this resource"
+      }
+    },
+    "containerRegistryName": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 50
+    },
+    "containerRegistrySku": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('containerRegistryName')]",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2017-10-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('containerRegistrySku')]"
+      },
+      "properties": {
+        "adminUserEnabled": true
+      }
+    }
+  ],
+  "outputs": {
+    "registryCredential": {
+      "type": "securestring",
+      "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName')), '2017-10-01').passwords[0].value]"
+    }
+  }
+}

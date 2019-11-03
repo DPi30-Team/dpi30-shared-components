@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "serviceBusSku": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "The messaging tier for service Bus namespace."
+      }
+    }
+  },
+  "variables": {
+    "serviceBusNamespaceName": "[concat(parameters('projectname'),'-',parameters('environmenttag'),'-',parameters('locationtag'),'-01-sbns')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-01",
+      "name": "[variables('serviceBusNamespaceName')]",
+      "type": "Microsoft.ServiceBus/namespaces",
+      "tags": {
+        "Display Name": "[concat('Service Bus Namespace: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('serviceBusSku')]"
+      },
+      "resources": [
+        {
+          "apiVersion": "2017-04-01",
+          "name": "ReadWrite",
+          "type": "AuthorizationRules",
+          "properties": {
+            "rights": [
+              "Send",
+              "Listen"
+            ]
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]"
+          ]
+        },
+        {
+          "apiVersion": "2017-04-01",
+          "name": "Read",
+          "type": "AuthorizationRules",
+          "properties": {
+            "rights": [
+              "Listen"
+            ]
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBusNamespaceName'))]",
+            "[resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', variables('serviceBusNamespaceName'), 'ReadWrite')]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "ServiceBusEndpoint": {
+      "type": "string",
+      "value": "[listkeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', variables('serviceBusNamespaceName'), 'ReadWrite'), '2017-04-01').primaryConnectionString]"
+    },
+    "ServiceBusEndpointReadOnly": {
+      "type": "string",
+      "value": "[listkeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', variables('serviceBusNamespaceName'), 'Read'), '2017-04-01').primaryConnectionString]"
+    }
+  }
+}

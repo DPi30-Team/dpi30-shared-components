@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the application insights resource"
+      }
+    },
+    "attachedService": {
+      "defaultValue": "",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-05-01",
+      "name": "[parameters('appInsightsName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "kind": "web",
+      "tags": {
+        "Display Name": "[concat('APP Insights: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "properties": {
+        "Application_Type": "web"
+      }
+    }
+  ],
+  "outputs": {
+    "InstrumentationKey": {
+      "type": "string",
+      "value": "[reference(concat('microsoft.insights/components/', parameters('appInsightsName'))).InstrumentationKey]"
+    },
+    "AppId": {
+      "type": "string",
+      "value": "[reference(concat('microsoft.insights/components/', parameters('appInsightsName'))).AppId]"
+    }
+  }
+}

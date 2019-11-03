@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "clusterName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of an existing AKS cluster."
+      }
+    },
+    "agentPoolName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the agent pool to create or update."
+      }
+    },
+    "agentNodeCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "The number of nodes for the cluster."
+      },
+      "minValue": 1,
+      "maxValue": 50
+    },
+    "agentVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2",
+      "metadata": {
+        "description": "The size of the Virtual Machine."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet name that will contain the aks CLUSTER"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of an existing VNET that will contain this AKS deployment."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the existing VNET resource group"
+      }
+    },
+    "kubernetesVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The version of Kubernetes."
+      }
+    }
+  },
+  "variables": {
+    "vnetSubnetId": "[resourceId(parameters('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks/subnets',parameters('virtualNetworkName'),parameters('subnetName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-06-01",
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "name": "[concat(parameters('clusterName'),'/', parameters('agentPoolName'))]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Display Name": "[concat('AKS Agent Pool: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "properties": {
+        "count": "[parameters('agentNodeCount')]",
+        "vmSize": "[parameters('agentVmSize')]",
+        "osType": "Linux",
+        "storageProfile": "ManagedDisks",
+        "type": "VirtualMachineScaleSets",
+        "vnetSubnetID": "[variables('vnetSubnetId')]",
+        "orchestratorVersion": "[parameters('kubernetesVersion')]"
+      }
+    }
+  ]
+}

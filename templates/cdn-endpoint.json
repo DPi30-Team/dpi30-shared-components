@@ -1,0 +1,148 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "cdnProfileName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Content Delivery Network profile"
+      }
+    },
+    "cdnEndPointName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the endpoint has to be unique"
+      }
+    },
+    "originHostName": {
+      "type": "string"
+    },
+    "optimizationType": {
+      "type": "string",
+      "defaultValue": "GeneralWebDelivery",
+      "allowedValues": [
+        "GeneralWebDelivery",
+        "GeneralMediaStreaming",
+        "VideoOnDemandMediaStreaming",
+        "LargeFileDownload",
+        "DynamicSiteAcceleration"
+      ]
+    },
+    "customDomainName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "isHttpAllowed": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "queryStringCachingBehavior": {
+      "type": "string",
+      "defaultValue": "IgnoreQueryString",
+      "allowedValues": [
+        "NotSet",
+        "IgnoreQueryString",
+        "UseQueryString",
+        "BypassCaching"
+      ]
+    },
+    "originPath": {
+      "type": "string",
+      "defaultValue": ""
+    }
+  },
+  "variables": {
+    "fullEndpointName": "[concat(parameters('cdnProfileName'), '/', parameters('cdnEndpointName'))]",
+    "customDomainEnabled": "[greater(length(parameters('customDomainName')), 0)]",
+    "originHostName": "[replace(replace(parameters('originHostName'),'https://',''),'/','')]"
+  },
+  "resources": [
+    {
+      "name": "[variables('fullEndpointName')]",
+      "type": "Microsoft.Cdn/profiles/endpoints",
+      "apiVersion": "2017-10-12",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "Display Name": "[concat('CDN Endpoint: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "properties": {
+        "originHostHeader": "[variables('originHostName')]",
+        "originPath": "[parameters('originPath')]",
+        "contentTypesToCompress": [
+          "text/plain",
+          "text/html",
+          "text/css",
+          "text/javascript",
+          "application/x-javascript",
+          "application/javascript",
+          "application/json",
+          "application/xml"
+        ],
+        "isCompressionEnabled": true,
+        "isHttpAllowed": "[parameters('isHttpAllowed')]",
+        "isHttpsAllowed": true,
+        "queryStringCachingBehavior": "[parameters('queryStringCachingBehavior')]",
+        "optimizationType": "[parameters('optimizationType')]",
+        "origins": [
+          {
+            "name": "[replace(parameters('originHostname'), '.', '-')]",
+            "properties": {
+              "hostName": "[variables('originHostName')]",
+              "httpPort": 80,
+              "httpsPort": 443
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-10-12",
+      "condition": "[variables('customDomainEnabled')]",
+      "type": "Microsoft.Cdn/profiles/endpoints/customDomains",
+      "name": "[concat(variables('fullEndpointName'), '/', if(variables('customDomainEnabled'), replace(parameters('customDomainName'), '.', '-'), 'placeholder'))]",
+      "properties": {
+        "hostName": "[parameters('customDomainName')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles/endpoints',parameters('cdnProfileName') , parameters('cdnEndPointName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "endpointHostName": {
+      "type": "string",
+      "value": "[reference(parameters('cdnEndPointName')).hostname]"
+    }
+  }
+}

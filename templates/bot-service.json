@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectname": {
+      "defaultValue": "adap",
+      "type": "string"
+    },
+    "projectversion": {
+      "defaultValue": "1.0",
+      "type": "string"
+    },
+    "chargebackid": {
+      "defaultValue": "8675309",
+      "type": "string"
+    },
+    "dri": {
+      "defaultValue": "admin@contoso.com",
+      "type": "string"
+    },
+    "environmenttag": {
+      "defaultValue": "dev",
+      "type": "string"
+    },
+    "locationtag": {
+      "defaultValue": "eus",
+      "type": "string"
+    },
+    "botServiceName": {
+      "type": "string"
+    },
+    "botServiceSku": {
+      "type": "string",
+      "allowedValues": [
+        "Free",
+        "Standard"
+      ]
+    },
+    "botEndpoint": {
+      "type": "string"
+    },
+    "microsoftAppId": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "skuMapping": {
+      "Free": "F0",
+      "Standard": "S1"
+    }
+  },
+  "resources": [
+    {
+      "name": "[parameters('botServiceName')]",
+      "type": "Microsoft.BotService/botServices",
+      "apiVersion": "2017-12-01",
+      "tags": {
+        "Display Name": "[concat('BOT Service: ',parameters('projectname'))]",
+        "Bill To - Internal Chargeback ID": "parameters('chargebackid')",
+        "Operator or Directly Responsible Individual (DRI)": "parameters('dri')",
+        "Project Name": "parameters('projectname')",
+        "Project Version": "parameters('projectversion')",
+        "Environment": "parameters('environmenttag')",
+        "Tier": "Data",
+        "Data Profile": "Confidential"
+      },
+      "location": "global",
+      "sku": {
+        "name": "[variables('skuMapping')[parameters('botServiceSku')]]"
+      },
+      "kind": "bot",
+      "properties": {
+        "name": "[parameters('botServiceName')]",
+        "displayName": "[parameters('botServiceName')]",
+        "endpoint": "[parameters('botEndpoint')]",
+        "msaAppId": "[parameters('microsoftAppId')]"
+      },
+      "dependsOn": []
+    }
+  ],
+  "outputs": {}
+}
